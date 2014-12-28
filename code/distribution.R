@@ -1,32 +1,21 @@
-# Event SNPi happens if the snps at position SNPi is a mutation in the genome
-
-#TODO; Optimise performance of cluster intersection cases calculation
-
-setwd("~/Yandex.Disk/Курсовая 4 курс/")
-
-if (!require("futile.logger")) {
-  install.packages("futile.logger")
-  library(futile.logger)
-}
-
-if(!exists("clustering.R", mode="function")) {
-  source("clustering.R")
+if(!exists("code/clustering.R", mode="function")) {
+  source("code/clustering.R")
 }
 
 flog.threshold(INFO)
-flog.appender(appender.file("distribution.log"), name="distribution")
+flog.appender(appender.file("output/logs/distribution.log"), name="distribution")
 
-snps_csv <- "finally-proper-snps-matrix.csv"
+snps_csv <- "resources/finally-proper-snps-matrix.csv"
 snps_data <- read.csv(snps_csv, head=TRUE, sep="\t", row.names=1)
 snps_sums <- colSums(snps_data)
 size <- length(snps_sums)
 
 
-phenotype_file <- "adopted_TB_Phenotypes.csv"
+phenotype_file <- "resources/adopted_TB_Phenotypes.csv"
 phenotypes <- read.csv(phenotype_file, head=TRUE, row.names=1, sep="\t")
 
 all_clusters <- get_all_clusters()
-core_cluster <- get_core_cluster();
+core_cluster <- get_core_cluster()
 
 num_of_clusters <- length(all_clusters)
 non_intersecting_clusters <- sapply(all_clusters, function(x){setdiff(x, core_cluster)})
@@ -128,4 +117,6 @@ for (cluster in non_intersecting_clusters) {
 }
 
 plot(resistance_probabilities)
+png(file = "output/graphics/resistance_probability.png")
 plot(resistance_probabilities, type = "b", xlab = "Clusters", ylab = "Resistance Probability")
+dev.off()

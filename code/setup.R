@@ -1,6 +1,5 @@
-setup <- function(need_logging) {
-  setwd("~/Yandex.Disk/Курсовая 4 курс/")
-  
+setup <- function(need_logging = TRUE) {
+  setwd("~/Yandex.Disk/Курсовая 4 курс/BioProject")
   if (need_logging) {
     import_logging()
   } 

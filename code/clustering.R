@@ -40,7 +40,7 @@ generate_next_base_vector <- function(index) {
 }
 
 significant_snps <- as.vector(unlist(
-  read.csv(file="/home/anjenson/Yandex.Disk/Курсовая 4 курс/singif_snps_p_filter.csv",
+  read.csv(file="resources/signif_snps_p_filter.csv",
            head=FALSE, sep=",")))
 
 filter_significant_snps <- function(snps) {  

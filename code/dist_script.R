@@ -1,4 +1,4 @@
-snps_csv <- "/home/anjenson/Yandex.Disk/Курсовая 4 курс/finally-proper-snps-matrix.csv"
+snps_csv <- "resources/finally-proper-snps-matrix.csv"
 snps_data <- read.csv(snps_csv, head=TRUE, sep="\t", row.names=1)
 snps_sums <- colSums(snps_data)
 size <- length(snps_sums)
@@ -72,7 +72,7 @@ mutations_per_position()
 #EMMA P-value filter
 significant_snps_stat <- function() {
   significant_snps <- as.vector(unlist(
-    read.csv(file="/home/anjenson/Yandex.Disk/Курсовая 4 курс/singif_snps_p_filter.csv",
+    read.csv(file="resources/singif_snps_p_filter.csv",
                                          head=FALSE, sep=",")))
   snps_pos <- snps_data$snp_pos
   pos_index <- 1
@@ -132,7 +132,7 @@ generate_next_base_vector <- function(index) {
 get_snp_frequency_in_cluster
 
 significant_snps <- as.vector(unlist(
-  read.csv(file="/home/anjenson/Yandex.Disk/Курсовая 4 курс/singif_snps_p_filter.csv",
+  read.csv(file="resources/singif_snps_p_filter.csv",
            head=FALSE, sep=",")))
 
 filter_significant_snps <- function(snps) {  
@@ -227,4 +227,4 @@ for (cluster in all_clusters) {
 
 names(all_cluster.df) <- paste("Cluster #", c(1:length(all_clusters)))
 
-write.csv(all_cluster.df, file="clusters.csv")
+write.csv(all_cluster.df, file="output/clusters.csv")
