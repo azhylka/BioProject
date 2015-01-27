@@ -1,5 +1,12 @@
+if (!require("hash")) {
+  install.packages("hash")
+  library(hash)
+}
+
 or <- function(x,y) {return(x|y)}
+
 and <- function(x, y) {return(x&y)}
+
 get_all_snp_pos <- function() {
   snp_pos_vec <- rep(0,nrow(snps_data)) 
   for (genome in snps_data[,2:size]) {    
@@ -117,3 +124,37 @@ get_all_clusters <- function() {
   }
   return(cluster_storage)
 }
+
+find.cluster <- function(target_snp_index, all_snps, processed_snps) {
+  print(paste("Building cluster for ", target_snp_index))
+  columns <- ncol(snps_data)
+  cluster <- list(snps_data$snp_pos[target_snp_index])  
+  for (index in 1:length(all_snps)) {
+    snp <- all_snps[index]
+    if (!has.key(snp, processed_snps)) {        
+      equal = sum(mapply(xor, snps_data[index, 2:columns], snps_data[target_snp_index, 2:columns])) == 0
+      if (equal) {
+        cluster <- c(cluster, snp)
+        processed_snps[snp] <- TRUE
+      }
+    }
+  }
+  return(cluster)
+}
+
+extract.clusters <- function() {
+  # regard this hash as hash set
+  processed_snps <- hash()
+  clusters <- list()
+  all_snps <- as.character(snps_data$snp_pos)  
+  for (index in 1:length(all_snps)) {  
+    snp <- all_snps[index]
+    if (!has.key(snp, processed_snps)) {
+      processed_snps[snp] <- TRUE      
+      new_cluster <- find.cluster(index, all_snps, processed_snps)
+      clusters <- list(clusters, new_cluster)
+    }
+  }
+  return(clusters)
+}
+
