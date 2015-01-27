@@ -70,8 +70,8 @@ def main():
 			'G55522', 'G55524', 'G55526', 'G55543', 'G55546',
 			'G55553', 'G55560']
 	control_snps_distances = get_sub_map(distance_map, control_snps_subset)
-	export_to_csv(distance_map, sorted(strains), 'distance_table.csv')
-	export_to_csv(control_snps_distances, sorted(control_snps_subset), 'control_distance_table.csv')
+	export_to_csv(distance_map, sorted(strains), 'resources/distance_table.csv')
+	export_to_csv(control_snps_distances, sorted(control_snps_subset), 'resources/control_distance_table.csv')
 
 
 if __name__ == "__main__":
