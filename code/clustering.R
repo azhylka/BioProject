@@ -3,6 +3,11 @@ if (!require("hash")) {
   library(hash)
 }
 
+if (!require("sets")) {
+  install.packages("sets")
+  library(sets)
+}
+
 or <- function(x,y) {return(x|y)}
 
 and <- function(x, y) {return(x&y)}
@@ -134,7 +139,7 @@ find.cluster <- function(target_snp_index, all_snps, processed_snps) {
     if (!has.key(snp, processed_snps)) {        
       equal = sum(mapply(xor, snps_data[index, 2:columns], snps_data[target_snp_index, 2:columns])) == 0
       if (equal) {
-        cluster <- c(cluster, snp)
+        cluster <- c(cluster, snps_data$snp_pos[index])
         processed_snps[snp] <- TRUE
       }
     }
@@ -145,16 +150,19 @@ find.cluster <- function(target_snp_index, all_snps, processed_snps) {
 extract.clusters <- function() {
   # regard this hash as hash set
   processed_snps <- hash()
-  clusters <- list()
+  clusters <- set()
   all_snps <- as.character(snps_data$snp_pos)  
+  subsetting_mask <- rep(TRUE, length(all_snps))
   for (index in 1:length(all_snps)) {  
     snp <- all_snps[index]
     if (!has.key(snp, processed_snps)) {
       processed_snps[snp] <- TRUE      
       new_cluster <- find.cluster(index, all_snps, processed_snps)
-      clusters <- list(clusters, new_cluster)
+      clusters <- set_union(clusters, new_cluster)
+    } else {
+      subsetting_mask[index] <- FALSE
     }
   }
-  return(clusters)
+  return(c(clusters, subsetting_mask))
 }
 
