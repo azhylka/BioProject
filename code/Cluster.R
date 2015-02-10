@@ -16,16 +16,16 @@ Cluster <- setClass("Cluster", slots = c(name = "character", elements = "list"),
 write <- function(cluster) UseMethod("write")
 
 write.Cluster <- function(cluster, file_name) {
-  write.csv(c(cluster.name, cluster.elements), file = file_name,
+  write.csv(c(cluster@name, cluster@elements), file = file_name,
             append = TRUE, row.names = FALSE)
 }
 
 parse.cluster <- function(cluster_line) {
   cluster_info <- strsplit(cluster_line, "[,]")
   parsed_cluster <- Cluster()
-  parsed_cluster.name <- cluster_info[[1]]
+  parsed_cluster@name <- cluster_info[[1]]
   elements <- as.set(cluster_info[2:length(cluster_info)])
-  parsed_cluster.elements <- elements
+  parsed_cluster@elements <- elements
   
   return(parsed_cluster)
 }
