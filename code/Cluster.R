@@ -10,16 +10,20 @@ if (!require("sets")) {
 
 cluster_storage <- hash()
 
-Cluster <- setClass("Cluster", slots = c(name = "character", elements = "list"),
-                    prototype = list(name="New cluster", elements = set()))
+Cluster <- setClass("Cluster", slots = c(name = "character", elements = "set"),
+                    prototype = list(name="New cluster", elements = c()))
 
-write <- function(cluster) UseMethod("write")
+write <- function(Cluster) UseMethod("write")
 
 write.Cluster <- function(cluster, file_name) {
-  write.csv(c(cluster@name, cluster@elements), file = file_name,
-            append = TRUE, row.names = FALSE)
+  value <- c(cluster@name, as.list(cluster@elements))  
+  write.table(value, file = file_name, sep = ",",
+            append = TRUE, row.names = FALSE, col.names=FALSE)
 }
 
+# Cluster string format:
+# cluster_name, cluster_el1[, cluster_el2, ...]
+#
 parse.cluster <- function(cluster_line) {
   cluster_info <- strsplit(cluster_line, "[,]")
   parsed_cluster <- Cluster()
@@ -31,7 +35,7 @@ parse.cluster <- function(cluster_line) {
 }
 
 read.clusters <- function(file_name) {  
-  for (line %in% readLines(file_name)) {
+  for (line in readLines(file_name)) {
     cluster <- parse.cluster(line)
     cluster_storage[cluster.name] <- cluster
   }
