@@ -8,6 +8,10 @@ if (!require("sets")) {
   library(sets)
 }
 
+if(!exists("code/Cluster.R", mode="function")) {
+  source("code/Cluster.R")
+}
+
 or <- function(x,y) {return(x|y)}
 
 and <- function(x, y) {return(x&y)}
@@ -132,25 +136,30 @@ get_all_clusters <- function() {
 
 find.cluster <- function(target_snp_index, all_snps, processed_snps) {
   print(paste("Building cluster for ", target_snp_index))
+  # the lowest position is used as name
+  cluster_name <- all_snps[target_snp_index]
   columns <- ncol(snps_data)
-  cluster <- list(snps_data$snp_pos[target_snp_index])  
+  cluster_elements <- set(snps_data$snp_pos[target_snp_index])  
   for (index in 1:length(all_snps)) {
     snp <- all_snps[index]
     if (!has.key(snp, processed_snps)) {        
       equal = sum(mapply(xor, snps_data[index, 2:columns], snps_data[target_snp_index, 2:columns])) == 0
       if (equal) {
-        cluster <- c(cluster, snps_data$snp_pos[index])
+        cluster_elements <- set_union(cluster_elements, snps_data$snp_pos[index])
         processed_snps[snp] <- TRUE
       }
     }
   }
+  cluster <- Cluster()
+  cluster@name = cluster_name
+  cluster@elements = cluster_elements
   return(cluster)
 }
 
 extract.clusters <- function() {
   # regard this hash as hash set
   processed_snps <- hash()
-  clusters <- set()
+  clusters <- c()
   all_snps <- as.character(snps_data$snp_pos)  
   subsetting_mask <- rep(TRUE, length(all_snps))
   for (index in 1:length(all_snps)) {  
@@ -158,7 +167,7 @@ extract.clusters <- function() {
     if (!has.key(snp, processed_snps)) {
       processed_snps[snp] <- TRUE      
       new_cluster <- find.cluster(index, all_snps, processed_snps)
-      clusters <- set_union(clusters, new_cluster)
+      clusters <- c(clusters, new_cluster)
     } else {
       subsetting_mask[index] <- FALSE
     }
@@ -172,3 +181,6 @@ subsetting_mask <- result$mask
 clustered_snps_data <- snps_data[subsetting_mask, ]
 write.table(clustered_snps_data, file="resources/clustered_snps_data.csv", sep=",", 
             col.names=TRUE, row.names=FALSE)
+for (cluster in clusters) {
+  write.Cluster(cluster, "output/all_clusters.csv")
+}
