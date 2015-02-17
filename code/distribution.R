@@ -6,7 +6,7 @@ flog.threshold(INFO)
 flog.appender(appender.file("output/logs/distribution.log"), name="distribution")
 
 snps_csv <- "resources/finally-proper-snps-matrix.csv"
-snps_data <- read.csv(snps_csv, head=TRUE, sep="\t", row.names=1)
+original_snps_data <- read.csv(snps_csv, head=TRUE, sep="\t", row.names=1)
 snps_sums <- colSums(snps_data)
 size <- length(snps_sums)
 
@@ -98,25 +98,43 @@ find_mutation_cases <- function(resistance, genomes, medicine) {
 
 resistance_conditional_probability <- function(resistance_status, cluster, medicine) {
   cluster_cases <- cluster_occurences(cluster)
-  mutation_cases_number <- find_mutation_cases(resistance_status, names(cluster_cases), medicine)
+  resistance_cases_number <- find_mutation_cases(resistance_status, names(cluster_cases), medicine)
   if (is.null(cluster_cases) | length(cluster_cases) == 0) {
     probability <- 0
   } else {
-    probability <- mutation_cases_number / length(cluster_cases)
+    probability <- resistance_cases_number / length(cluster_cases)
   }
   return(probability)
 }
 
+result <- extract.clusters()
+clusters <- result$clusters
+subsetting_mask <- result$mask
+snps_data <- original_snps_data[subsetting_mask, ]
 
 medicine <- "ETHA"
-resistance_probabilities <- rep(0, num_of_clusters)
+clusters_number <- length(clusters)
+resistance_probabilities <- rep(0, clusters_number)
+
 cluster_index <- 0
-for (cluster in non_intersecting_clusters) {
+for (cluster in clusters) {
   cluster_index <- cluster_index + 1
-  resistance_probabilities[cluster_index] <- resistance_conditional_probability(2, cluster, medicine)
+  # cluster name is always formed of the first element in cluster that is saved in filtered dataset
+  print(cluster@name)
+  cluster_representative <- strtoi(cluster@name)
+  # create list of representative in order to reuse code
+  resistance_probabilities[cluster_index] <- 
+    resistance_conditional_probability(2, c(cluster_representative), medicine)
 }
 
 plot(resistance_probabilities)
-png(file = "output/graphics/resistance_probability.png")
-plot(resistance_probabilities, type = "b", xlab = "Clusters", ylab = "Resistance Probability")
-dev.off()
+start_index <- 1
+plot_step <- 40
+while (start_index < clusters_number) {
+  next_index <- start_index + plot_step
+  next_index <- ifelse(next_index > clusters_number, clusters_number, next_index)
+  png(file = paste("output/graphics/resistance_probability_", next_index, ".png", sep=""))
+  plot(start_index:next_index, resistance_probabilities[start_index:next_index], type = "l", xlab = "Clusters", ylab = "Resistance Probability")
+  dev.off()
+  start_index <- next_index + 1 
+}
