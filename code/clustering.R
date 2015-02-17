@@ -175,12 +175,12 @@ extract.clusters <- function() {
   return(list(clusters = clusters, mask = subsetting_mask))
 }
 
-result <- extract.clusters()
-clusters <- result$clusters
-subsetting_mask <- result$mask
-clustered_snps_data <- snps_data[subsetting_mask, ]
-write.table(clustered_snps_data, file="resources/clustered_snps_data.csv", sep=",", 
-            col.names=TRUE, row.names=FALSE)
-for (cluster in clusters) {
-  write.Cluster(cluster, "output/all_clusters.csv")
-}
+#result <- extract.clusters()
+#clusters <- result$clusters
+#subsetting_mask <- result$mask
+#clustered_snps_data <- original_snps_data[subsetting_mask, ]
+#write.table(clustered_snps_data, file="resources/clustered_snps_data.csv", sep=",", 
+#            col.names=TRUE, row.names=FALSE)
+#for (cluster in clusters) {
+#  write.Cluster(cluster, "output/all_clusters.csv")
+#}
