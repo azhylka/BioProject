@@ -11,3 +11,5 @@ import_logging <- function() {
     library(futile.logger)
   }
 }
+
+setup()

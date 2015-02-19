@@ -2,36 +2,6 @@ if(!exists("code/clustering.R", mode="function")) {
   source("code/clustering.R")
 }
 
-flog.threshold(INFO)
-flog.appender(appender.file("output/logs/distribution.log"), name="distribution")
-
-snps_csv <- "resources/finally-proper-snps-matrix.csv"
-original_snps_data <- read.csv(snps_csv, head=TRUE, sep="\t", row.names=1)
-snps_sums <- colSums(snps_data)
-size <- length(snps_sums)
-
-
-phenotype_file <- "resources/adopted_TB_Phenotypes.csv"
-phenotypes <- read.csv(phenotype_file, head=TRUE, row.names=1, sep="\t")
-
-all_clusters <- get_all_clusters()
-core_cluster <- get_core_cluster()
-
-num_of_clusters <- length(all_clusters)
-non_intersecting_clusters <- sapply(all_clusters, function(x){setdiff(x, core_cluster)})
-non_intersecting_clusters[num_of_clusters+1] <- list(core_cluster)
-
-cluster_statistics <- data.frame()
-
-#update number of clusters
-num_of_clusters <- length(non_intersecting_clusters)
-cluster_probability <- rep(0, num_of_clusters)
-#compute cluster probability
-i <- 0
-for (cluster in non_intersecting_clusters) {
-  cluster_probability[i] <- length(cluster) / nrow(snps_data)
-}
-
 position_to_index <- function(snps_positions) {
   indexes <- sapply(snps_positions, function(x){match(x, snps_data$snp_pos)})
   return(indexes)
@@ -60,6 +30,21 @@ snp_probability <- function(snp) {
   genomes <- find_genomes_by_snp(snp)
   probability <- length(genomes) / (ncol(snps_data) - 1)
   return(probability)
+}
+
+resistance_probability <- function(medicine, resistance_status) {
+  cases_number <- 0
+  total_cases <- 0
+  for (i in 1:nrow(phenotypes)) {
+    status <- phenotypes[i, medicine]
+    if (!is.na(status) & status == resistance_status) {
+      cases_number <- cases_number + 1
+    }
+    if (!is.na(status)) {
+      total_cases <- total_cases + 1
+    }
+  }
+  probability <- cases_number / total_cases
 }
 
 cluster_occurences <- function(cluster) {
@@ -96,45 +81,39 @@ find_mutation_cases <- function(resistance, genomes, medicine) {
   return(cases_number)
 }
 
-resistance_conditional_probability <- function(resistance_status, cluster, medicine) {
+snp_when_resistance_probability <- function(resistance_status, cluster, medicine) {
   cluster_cases <- cluster_occurences(cluster)
-  resistance_cases_number <- find_mutation_cases(resistance_status, names(cluster_cases), medicine)
   if (is.null(cluster_cases) | length(cluster_cases) == 0) {
     probability <- 0
-  } else {
-    probability <- resistance_cases_number / length(cluster_cases)
+    
+  } else {    
+    genomes <- names(cluster_cases)
+    total_cases <- 0  
+    resistance_cases_number <- 0
+    
+    for (genome in genomes) {
+      status <- phenotypes[genome, medicine]
+      if (!is.na(status) & status == resistance_status) {
+        resistance_cases_number <- resistance_cases_number + 1
+      } 
+      if (!is.na(status)) {
+        total_cases <- total_cases + 1
+      } 
+    }  
+    
+    probability <- resistance_cases_number / total_cases
   }
   return(probability)
 }
 
-result <- extract.clusters()
-clusters <- result$clusters
-subsetting_mask <- result$mask
-snps_data <- original_snps_data[subsetting_mask, ]
+resistance_when_snp_probability <- function(resistance_status, cluster, medicine) {
+  snp_when_resistance <- snp_when_resistance_probability(resistance_status, cluster, medicine)  
+  
+  cluster_probability <- snp_probability(cluster[1])  
+  resistance_probability <- resistance_probability(medicine, resistance_status)
+  
+  probability <- 1.0 * snp_when_resistance * cluster_probability / resistance_probability
 
-medicine <- "ETHA"
-clusters_number <- length(clusters)
-resistance_probabilities <- rep(0, clusters_number)
-
-cluster_index <- 0
-for (cluster in clusters) {
-  cluster_index <- cluster_index + 1
-  # cluster name is always formed of the first element in cluster that is saved in filtered dataset
-  print(cluster@name)
-  cluster_representative <- strtoi(cluster@name)
-  # create list of representative in order to reuse code
-  resistance_probabilities[cluster_index] <- 
-    resistance_conditional_probability(2, c(cluster_representative), medicine)
+  return(probability)  
 }
 
-plot(resistance_probabilities)
-start_index <- 1
-plot_step <- 40
-while (start_index < clusters_number) {
-  next_index <- start_index + plot_step
-  next_index <- ifelse(next_index > clusters_number, clusters_number, next_index)
-  png(file = paste("output/graphics/resistance_probability_", next_index, ".png", sep=""))
-  plot(start_index:next_index, resistance_probabilities[start_index:next_index], type = "l", xlab = "Clusters", ylab = "Resistance Probability")
-  dev.off()
-  start_index <- next_index + 1 
-}
