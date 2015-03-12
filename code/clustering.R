@@ -17,8 +17,8 @@ or <- function(x,y) {return(x|y)}
 and <- function(x, y) {return(x&y)}
 
 get_all_snp_pos <- function() {
-  snp_pos_vec <- rep(0,nrow(snps_data)) 
-  for (genome in snps_data[,2:size]) {    
+  snp_pos_vec <- rep(0,nrow(original_snps_data)) 
+  for (genome in original_snps_data[,2:size]) {    
     snp_pos_vec <- mapply(or, snp_pos_vec, genome)
   }
   
@@ -38,7 +38,7 @@ get_snp_position_labels <- function(snp_indicators) {
   label_index <- 1
   for (indicator in snp_indicators) {    
     if (indicator) {
-      positions[index] <- snps_data$snp_pos[label_index]
+      positions[index] <- original_snps_data$snp_pos[label_index]
       index <- index + 1
     }
     label_index <- label_index + 1
@@ -47,12 +47,12 @@ get_snp_position_labels <- function(snp_indicators) {
 }
 
 generate_next_base_vector <- function(index) {  
-  for (column in 2:ncol(snps_data)) {
-    if (snps_data[index, column] == 1) {      
-      return(snps_data[,column])
+  for (column in 2:ncol(original_snps_data)) {
+    if (original_snps_data[index, column] == 1) {      
+      return(original_snps_data[,column])
     }
   }
-  return(rep(0, nrow(snps_data)))
+  return(rep(0, nrow(original_snps_data)))
 }
 
 significant_snps <- as.vector(unlist(
@@ -61,7 +61,7 @@ significant_snps <- as.vector(unlist(
 
 filter_significant_snps <- function(snps) {  
   filtered_snps <- snps
-  snp_positions <- snps_data$snp_pos
+  snp_positions <- original_snps_data$snp_pos
   for (index in 1:length(snp_positions)) {
     if (!(snp_positions[index] %in% significant_snps)) {
       filtered_snps[index] = FALSE
@@ -71,14 +71,14 @@ filter_significant_snps <- function(snps) {
 }
 
 get_core_cluster <- function() {
-  cluster <- Reduce(function(x, y){mapply(and, x, y)}, snps_data[,2:size])                      
+  cluster <- Reduce(function(x, y){mapply(and, x, y)}, original_snps_data[,2:size])                      
   return(get_snp_position_labels(cluster))      
 }
 
 find_mutated_genomes_indeces <- function(snp_index) {
   indeces <- c()
   for (column in 2:size) {
-    if (snps_data[snp_index, column] == 1) {
+    if (original_snps_data[snp_index, column] == 1) {
       indeces <- c(indeces, column)
     } 
   }
@@ -86,12 +86,12 @@ find_mutated_genomes_indeces <- function(snp_index) {
 }
 
 find_genomes_by_snp <- function(snp) {
-  snp_index <- match(snp, snps_data$snp_pos)
+  snp_index <- match(snp, original_snps_data$snp_pos)
   return(find_genomes_by_snp_index(snp_index))
 }
 
 find_genomes_by_snp_index <- function(snp_index) {
-  return(snps_data[find_mutated_genomes_indeces(snp_index)])
+  return(original_snps_data[find_mutated_genomes_indeces(snp_index)])
 }
 
 get_significant_core_snps <- function(core_cluster) {
@@ -127,7 +127,7 @@ get_all_clusters <- function() {
         storage_size <- storage_size + 1
         cluster_storage[[storage_size]] <- remove_core_snps(get_snp_position_labels(cluster),
                                                             core_cluster)
-        names(cluster_storage)[[storage_size]] <- paste("Cluster of SNP", snps_data$snp_pos[index])
+        names(cluster_storage)[[storage_size]] <- paste("Cluster of SNP", original_snps_data$snp_pos[index])
       }
     }
   }
@@ -138,14 +138,14 @@ find.cluster <- function(target_snp_index, all_snps, processed_snps) {
   print(paste("Building cluster for ", target_snp_index))
   # the lowest position is used as name
   cluster_name <- all_snps[target_snp_index]
-  columns <- ncol(snps_data)
-  cluster_elements <- set(snps_data$snp_pos[target_snp_index])  
+  columns <- ncol(original_snps_data)
+  cluster_elements <- set(original_snps_data$snp_pos[target_snp_index])  
   for (index in 1:length(all_snps)) {
     snp <- all_snps[index]
     if (!has.key(snp, processed_snps)) {        
-      equal = sum(mapply(xor, snps_data[index, 2:columns], snps_data[target_snp_index, 2:columns])) == 0
+      equal = sum(mapply(xor, original_snps_data[index, 2:columns], original_snps_data[target_snp_index, 2:columns])) == 0
       if (equal) {
-        cluster_elements <- set_union(cluster_elements, snps_data$snp_pos[index])
+        cluster_elements <- set_union(cluster_elements, original_snps_data$snp_pos[index])
         processed_snps[snp] <- TRUE
       }
     }
@@ -160,7 +160,7 @@ extract.clusters <- function() {
   # regard this hash as hash set
   processed_snps <- hash()
   clusters <- c()
-  all_snps <- as.character(snps_data$snp_pos)  
+  all_snps <- as.character(original_snps_data$snp_pos)  
   subsetting_mask <- rep(TRUE, length(all_snps))
   for (index in 1:length(all_snps)) {  
     snp <- all_snps[index]

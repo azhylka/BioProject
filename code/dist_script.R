@@ -1,5 +1,3 @@
-snps_csv <- "resources/finally-proper-snps-matrix.csv"
-snps_data <- read.csv(snps_csv, head=TRUE, sep="\t", row.names=1)
 snps_sums <- colSums(snps_data)
 size <- length(snps_sums)
 

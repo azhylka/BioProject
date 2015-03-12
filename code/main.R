@@ -6,8 +6,8 @@ if(!exists("code/distribution.R", mode="function")) {
 flog.threshold(INFO)
 flog.appender(appender.file("output/logs/distribution.log"), name="distribution")
 
-snps_csv <- "resources/finally-proper-snps-matrix.csv"
-original_snps_data <- read.csv(snps_csv, head=TRUE, sep="\t", row.names=1)
+snps_csv <- "resources/full_proper_snps_matrix.csv"
+original_snps_data <- read.csv(snps_csv, head=TRUE, sep=",")
 snps_sums <- colSums(snps_data)
 size <- length(snps_sums)
 
