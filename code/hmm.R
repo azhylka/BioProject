@@ -1,5 +1,3 @@
-setwd("~/Yandex.Disk/Курсовая 4 курс/")
-
 if (!require("futile.logger")) {
   install.packages("futile.logger")
   library(futile.logger)
@@ -15,17 +13,18 @@ if (!require("PLIS")) {
   library(PLIS)
 }
 
-if(!exists("filtering.R", mode="function")) {
-  source("filtering.R")
+if(!exists("code/filtering.R", mode="function")) {
+  source("code/filtering.R")
 }
 
 
 flog.threshold(INFO)
-flog.appender(appender.file("hmm.log"), name="hmm")
-phenotype_file <- "adopted_TB_Phenotypes.csv"
+log_file_name <- sprintf("output/logs/%s/hmm.log", format(Sys.time(), "%Y-%m-%d"))
+flog.appender(appender.file(), name="hmm")
+phenotype_file <- "resources/adopted_TB_Phenotypes.csv"
 phenotypes <- read.csv(phenotype_file, head=TRUE, row.names=1, sep="\t")
 
-snps_csv <- "finally-proper-snps-matrix.csv"
+snps_csv <- "resources/finally-proper-snps-matrix.csv"
 snps_data <- read.csv(snps_csv, head=TRUE, sep="\t", row.names=1)
 filtered_snps_data <- minor.allele.frequency.filter(data = snps_data, minor_allele = 1)
 
@@ -68,7 +67,7 @@ get_snp_stat_info <- function(medicine) {
     } else {
       z_value <- 1.0 / pnorm(p_value * 0.5, mean = 0, sd = 1)
     }
-    snp_info.df <- rbind(snp_info.df, c(filtered_snps_datasnps_data[snp_index,1], p_value, odds_ratio, z_value))
+    snp_info.df <- rbind(snp_info.df, c(filtered_snps_data[snp_index,1], p_value, odds_ratio, z_value))
   }
   names(snp_info.df) <- c("snp", "p_value", "odds_ratio", "z_value")
   return(snp_info.df)
@@ -95,12 +94,16 @@ get_hypothesis_states <- function(snp_info, fdr = 0.001) {
   }  
 }
 
+out_dir <- sprintf("output/hmm_results/%s/", format(Sys.time(), "%Y-%m-%d"))
+
+if(!file.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
+
 flog.info("ETHA")
 flog.info("ETHA", name='hmm')
 etha_snp_info <- get_snp_stat_info("ETHA")
 etha_states <- get_hypothesis_states(etha_snp_info, fdr = 0.0001)
 if (!is.null(etha_states)) {
-  write.csv(etha_states, file = "hmm_results/etha_hmm_plis.csv",  row.names = etha_snp_info$snp)
+  write.csv(etha_states, file = paste(out_dir, "etha_hmm_plis.csv"),  row.names = etha_snp_info$snp)
 }
 
 flog.info("ISON")
@@ -108,7 +111,7 @@ flog.info("ISON", name='hmm')
 ison_snp_info <- get_snp_stat_info("ISON")
 ison_states <- get_hypothesis_states(ison_snp_info)
 if (!is.null(ison_states)) {
-  write.csv(ison_states, file = "hmm_results/ison_hmm_plis.csv",  row.names = ison_snp_info$snp)
+  write.csv(ison_states, file = paste(out_dir, "ison_hmm_plis.csv"),  row.names = ison_snp_info$snp)
 }
 
 flog.info("STRE")
@@ -116,7 +119,7 @@ flog.info("STRE", name='hmm')
 stre_snp_info <- get_snp_stat_info("STRE")
 stre_states <- get_hypothesis_states(stre_snp_info)
 if (!is.null(stre_states)) {
-  write.csv(stre_states, file = "hmm_results/stre_hmm_plis.csv",  row.names = stre_snp_info$snp)
+  write.csv(stre_states, file = paste(out_dir, "stre_hmm_plis.csv"),  row.names = stre_snp_info$snp)
 }
 
 flog.info("ETHI")
@@ -124,7 +127,7 @@ flog.info("ETHI", name='hmm')
 ethi_snp_info <- get_snp_stat_info("ETHI")
 ethi_states <- get_hypothesis_states(ethi_snp_info)
 if (!is.null(ethi_states)) {
-  write.csv(ethi_states, file = "hmm_results/ethi_hmm_plis.csv",  row.names = ethi_snp_info$snp)
+  write.csv(ethi_states, file = paste(out_dir, "ethi_hmm_plis.csv"),  row.names = ethi_snp_info$snp)
 }
 
 flog.info("PARA")
@@ -132,7 +135,7 @@ flog.info("PARA", name='hmm')
 para_snp_info <- get_snp_stat_info("PARA")
 para_states <- get_hypothesis_states(para_snp_info)
 if (!is.null(para_states)) {
-  write.csv(para_states, file = "hmm_results/para_hmm_plis.csv",  row.names = para_snp_info$snp)
+  write.csv(para_states, file = paste(out_dir, "para_hmm_plis.csv"),  row.names = para_snp_info$snp)
 }
 
 flog.info("AMIK")
@@ -140,7 +143,7 @@ flog.info("AMIK", name='hmm')
 amik_snp_info <- get_snp_stat_info("AMIK")
 amik_states <- get_hypothesis_states(amik_snp_info)
 if (!is.null(amik_states)) {
-  write.csv(amik_states, file = "hmm_results/amik_hmm_plis.csv",  row.names = amik_snp_info$snp)
+  write.csv(amik_states, file = paste(out_dir, "amik_hmm_plis.csv"),  row.names = amik_snp_info$snp)
 }
 
 flog.info("OFLO")
@@ -148,6 +151,6 @@ flog.info("OFLO", name='hmm')
 oflo_snp_info <- get_snp_stat_info("OFLO")
 oflo_states <- get_hypothesis_states(oflo_snp_info)
 if (!is.null(oflo_states)) {
-  write.csv(oflo_states, file = "hmm_results/oflo_hmm_plis.csv",  row.names = oflo_snp_info$snp)
+  write.csv(oflo_states, file = paste(out_dir, "oflo_hmm_plis.csv"),  row.names = oflo_snp_info$snp)
 }
 

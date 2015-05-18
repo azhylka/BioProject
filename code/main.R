@@ -15,7 +15,6 @@ size <- length(snps_sums)
 phenotype_file <- "resources/adopted_TB_Phenotypes.csv"
 phenotypes <- read.csv(phenotype_file, head=TRUE, row.names=1, sep="\t")
 
-
 clustering_result <- extract.clusters()
 clusters <- clustering_result$clusters
 subsetting_mask <- clustering_result$mask
